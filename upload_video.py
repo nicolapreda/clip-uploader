@@ -42,24 +42,35 @@ while newest_file != '':
         },
         'notifySubscribers': False
     }
+    try:
+        #Upload last file 
+        mediaFile = MediaFileUpload(newest_file)
+        print('upload in progress...')
 
-    #Upload last file 
-    mediaFile = MediaFileUpload(newest_file)
-    print('upload in progress...')
+        response_upload = service.videos().insert(
+            part='snippet,status',
+            body=request_body,
+            media_body=mediaFile
+        ).execute()
+    except:
+        print("error in the Youtube API")  
+        time.sleep(5)
+        os.system("python upload_video.py")
+        print("restarting the script...")  #if there aren't any files, the script restarts
+        exit()
 
-    response_upload = service.videos().insert(
-        part='snippet,status',
-        body=request_body,
-        media_body=mediaFile
-    ).execute()
-
-    print("await the upload of the video...")
+    print(file_title + " uploaded successfully")
     time.sleep(5) #5 seconds delay
-    #Remove the last file uploaded
-    print("removing the last .mp4 file...")
-    
-    newest_file = 1 #Set the value of var in int
-    os.close(newest_file)   #Close process
-    newest_file = max(mp4_files, key = os.path.getctime)    #Get the last video uploaded
-    os.remove(newest_file)  #Remove the last video
-    print("last video removed")
+    def deletelastvideo():
+        #Remove the last file uploaded
+        print("removing the last .mp4 file...")  
+        try:
+            newest_file = 1 #Set the value of var in int
+            os.close(newest_file)   #Close process
+            newest_file = max(mp4_files, key = os.path.getctime)    #Get the last video uploaded
+            os.remove(newest_file)  #Remove the last video
+            print("last video removed")
+        except:
+            print("Remove Failed: script is using the file")
+            return deletelastvideo()
+    deletelastvideo()
