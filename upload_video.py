@@ -5,6 +5,8 @@ from googleapiclient.http import MediaFileUpload
 #Get the last file in the folder
 import glob
 import os
+#Check if file is corrupted
+import integv
 #Add delay in code
 import time
 #Delete last file
@@ -31,6 +33,28 @@ except:
           )  #if there aren't any files, the script restarts
     exit()
 
+
+def filevalidator():
+    with open(newest_file, "rb") as f:
+        filevalidator = f.read()
+    # verify using the file and file_type
+    integv.verify(filevalidator, file_type="mp4")  # True
+
+    # a corrupted file (in this case, shortened by one byte) will not pass the verification
+    integv.verify(filevalidator[:-1], file_type="mp4")  # False
+
+    # if the file path contains a proper filename extension, the file_type is not needed.
+    verified_latest_file = integv.verify(newest_file)  # True
+
+    if verified_latest_file == False:
+        print("File corrupted\nRestarting Script in 60 seconds...")
+        time.sleep(60)
+        os.system("python upload_video.py")
+        exit()
+
+
+filevalidator()
+
 file_title = os.path.splitext(newest_file)[0]  #get the title of file
 
 request_body = {
@@ -50,9 +74,9 @@ try:
     mediaFile = MediaFileUpload(newest_file)
     print('Upload in progress...')
 
-    response_upload = service.videos().insert(part='snippet,status',
-                                              body=request_body,
-                                              media_body=mediaFile).execute()
+    response_upload = service.videos().insert(
+        part='snippet,status', body=request_body,
+        media_body=mediaFile).execute()  #Upload Video On Youtube
 except:
     print("Error in the Youtube API")
     time.sleep(5)
