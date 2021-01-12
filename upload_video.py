@@ -12,6 +12,10 @@ import time
 #Delete last file
 import sys
 import subprocess
+#Limit bandwidth
+import asyncio
+import aiohttp
+import aiothrottle
 
 CLIENT_SECRET_FILE = 'client_secret.json'
 API_NAME = 'youtube'
@@ -70,6 +74,10 @@ request_body = {
     'notifySubscribers': False
 }
 try:
+    #Set bandwith limit (YT Queries limits set to 10.000)
+    aiothrottle.limit_rate(200 * 1024)
+    print("Set Bandwidth limit to 200kb/s")
+    
     #Upload last file
     mediaFile = MediaFileUpload(newest_file)
     print('Upload in progress...')
